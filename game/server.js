@@ -70,8 +70,7 @@ let powerUps = []; // Almacena los power-ups activos en el mapa
 
 // Generar power-ups periódicamente
 function generatePowerUp() {
-  // Deshabilitado temporalmente para tener una consola más limpia
-  if (powerUps.length < 3 && Math.random() < 0.1) { // Reducimos la frecuencia al 10% y máximo 3 power-ups
+  if (powerUps.length < 10) { // Aumentamos el número máximo de power-ups en el mapa
     let x, y;
     do {
       x = Math.floor(Math.random() * 5000);
@@ -81,8 +80,7 @@ function generatePowerUp() {
     const types = ['speed', 'shield', 'tripleShot'];
     const type = types[Math.floor(Math.random() * types.length)];
     
-    // Deshabilitado temporalmente para tener una consola más limpia
-    // console.log(`Power-up generado: ${type} en (${x}, ${y})`);
+    console.log(`Power-up generado: ${type} en (${x}, ${y})`);
     
     powerUps.push({
       id: Date.now() + Math.random(),
@@ -96,8 +94,8 @@ function generatePowerUp() {
   }
 }
 
-// Generar power-ups cada 30 segundos (mucho menos frecuente)
-setInterval(generatePowerUp, 30000);
+// Generar power-ups cada 5 segundos (más frecuente)
+setInterval(generatePowerUp, 5000);
 
 // Comprobar y eliminar power-ups caducados
 function cleanupPowerUps() {
@@ -105,83 +103,59 @@ function cleanupPowerUps() {
   const oldLength = powerUps.length;
   powerUps = powerUps.filter(powerUp => now - powerUp.createdAt < 30000); // Eliminar después de 30 segundos
   
-  // Deshabilitado temporalmente para tener una consola más limpia
-  // if (oldLength !== powerUps.length) {
-  //   console.log(`Power-ups caducados eliminados. Quedan: ${powerUps.length}`);
-  // }
+  if (oldLength !== powerUps.length) {
+    console.log(`Power-ups caducados eliminados. Quedan: ${powerUps.length}`);
+  }
 }
 
 // Limpiar power-ups caducados cada 5 segundos
 setInterval(cleanupPowerUps, 5000);
 
-// Colocar aquí la implementación original para la detección de hits
-
-bulletPhysics.checkHits = function(players) {
-  let toRemove = [];
-  for (let i = 0; i < this.bullets.length; i++) {
-    let bullet = this.bullets[i];
-    for (let key in players) {
-      let player = players[key];
-      if (key !== bullet.owner) {
-        let dx = bullet.x - player.x;
-        let dy = bullet.y - player.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 30) {
-          player.health -= bullet.damage;
-          player.killedBy = bullet.owner;
-          toRemove.push(i);
-          
-          // Si el jugador muere por este disparo, envía evento de recompensa inmediatamente
-          if (player.health <= 0 && io.sockets.connected[bullet.owner]) {
-            io.to(bullet.owner).emit('kill reward');
-            console.log(`Player ${players[bullet.owner].name} killed ${player.name} and received a reward`);
-          }
-          
-          break;
-        }
-      }
-    }
-  }
-
-  for (let i = toRemove.length - 1; i >= 0; i--) {
-    this.bullets.splice(toRemove[i], 1);
-  }
-};
-
 io.on('connection', function(socket) {
-  socket.on('new player', function(playerInfo) {
-    console.log(playerInfo);
-    
-    // Generar posición de spawn aleatoria
-    let x, y;
-    do {
-      x = Math.floor(Math.random() * 5000);
-      y = Math.floor(Math.random() * 5000);
-    } while(!model.map.square[Math.floor(y/50)][Math.floor(x/50)].isPassable);
-    
-    // Usar el nick proporcionado o generar uno predeterminado
-    const nick = playerInfo?.nick || ('Player-' + Math.floor(Math.random() * 1000));
-    players[socket.id] = model.getNewPlayer(x, y, 1500, 0, nick);
-    
-    // Asignar un color aleatorio entre rojo, azul y verde
-    const colors = ['red', 'blue', 'green'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    
-    // Asignar el color aleatorio en vez de usar el seleccionado por el jugador
-    players[socket.id].color = randomColor;
-    
-    // Añadir propiedades para power-ups
-    players[socket.id].powerUps = {
-      speed: { active: false, endTime: 0 },
-      shield: { active: false, endTime: 0 },
-      tripleShot: { active: false, endTime: 0 }
-    };
-    
-    console.log(`Player connected: ${players[socket.id].name} (${players[socket.id].color}) ${socket.id}`);
-    model.leaderboard.addEntry(players[socket.id].name, socket.id, 0);
-    
-    // Enviar historial de chat al nuevo jugador
-    socket.emit('chat history', chatMessages);
+  socket.on('new player', function() {
+    if (playersInQueue.length > 0) {
+      let x, y;
+      do {
+        x = Math.floor(Math.random()*5000);
+        y = Math.floor(Math.random()*5000);
+      } while(!model.map.square[Math.floor(y/50)][Math.floor(x/50)].isPassable)
+
+      const playerInfo = playersInQueue.shift();
+      const newPlayer = model.getNewPlayer(x, y, 1500, 0, playerInfo.nick);
+      
+      // Añadir color al jugador
+      newPlayer.color = playerInfo.color;
+      
+      // Añadir propiedades para power-ups
+      newPlayer.powerUps = {
+        speed: { active: false, endTime: 0 },
+        shield: { active: false, endTime: 0 },
+        tripleShot: { active: false, endTime: 0 }
+      };
+      
+      players[socket.id] = newPlayer;
+      console.log(`Player connected: ${newPlayer.name} (${newPlayer.color}) ${socket.id}`);
+      model.leaderboard.addEntry(newPlayer.name, socket.id, 0);
+      
+      // Enviar historial de chat al nuevo jugador
+      socket.emit('chat history', chatMessages);
+    }
+    else {
+      const defaultPlayer = model.getNewPlayer(500, 500, 1500, 0, 'Player-' + Math.floor(Math.random() * 1000));
+      defaultPlayer.color = 'red'; // Color por defecto
+      defaultPlayer.powerUps = {
+        speed: { active: false, endTime: 0 },
+        shield: { active: false, endTime: 0 },
+        tripleShot: { active: false, endTime: 0 }
+      };
+      
+      players[socket.id] = defaultPlayer;
+      console.log("Player connected: " + players[socket.id].name + " " + socket.id);
+      model.leaderboard.addEntry(players[socket.id].name, socket.id, 0);
+      
+      // Enviar historial de chat al nuevo jugador
+      socket.emit('chat history', chatMessages);
+    }
   });
 
   socket.on('disconnect', function() {
@@ -201,16 +175,12 @@ io.on('connection', function(socket) {
     // Limitar longitud del mensaje
     const truncatedMessage = message.substring(0, 100);
     const playerName = players[socket.id].name;
-    const playerColor = players[socket.id].color || 'red';
     
     const chatMessage = {
       sender: playerName,
       text: truncatedMessage,
-      timestamp: Date.now(),
-      color: playerColor // Añadir color del jugador para mostrar en el chat
+      timestamp: Date.now()
     };
-    
-    console.log(`Chat message from ${playerName}: ${truncatedMessage}`);
     
     // Guardar mensaje en el historial
     chatMessages.push(chatMessage);
@@ -342,28 +312,22 @@ setInterval(function() {
   bulletPhysics.checkHits(players);
   model.getItems().checkColissions(players);
 
+
   for (let key in players) {
-    let thisPlayer = players[key];
+    let thisPlayer=players[key];
     if (!thisPlayer) continue; // Si el jugador no existe, saltar
     
-    let thisPlayerAbsolute = thisPlayer;
+    let thisPlayerAbsolute=thisPlayer;
     let emitPlayers = JSON.parse(JSON.stringify(players));
-    
     for (let key2 in emitPlayers) {
-      emitPlayers[key2].x = emitPlayers[key2].x - thisPlayer.x + 500;
-      emitPlayers[key2].y = emitPlayers[key2].y - thisPlayer.y + 400;
+      emitPlayers[key2].x=emitPlayers[key2].x - thisPlayer.x + 500;
+      emitPlayers[key2].y=emitPlayers[key2].y - thisPlayer.y + 400;
     }
 
     if (io.sockets.connected[key] && thisPlayer.health <= 0) {
       if (io.sockets.connected[thisPlayer.killedBy]) {
         model.leaderboard.addPoint(thisPlayer.killedBy);
-        
-        // Enviar evento de recompensa por kill al jugador que eliminó a otro
-        io.to(thisPlayer.killedBy).emit('kill reward');
-        
-        console.log(`Player ${players[thisPlayer.killedBy].name} killed ${thisPlayer.name} and received a reward`);
-      }
-      
+        }
       thisPlayer.dropItem(model.getItems().array);
       io.to(key).emit('death');
       io.sockets.connected[key].disconnect();
@@ -378,5 +342,10 @@ setInterval(function() {
     }
 
     io.to(key).emit('update', emitPlayers, thisPlayer, thisPlayerAbsolute, playerMap, bulletPhysics.bullets, model.getItems().array, model.leaderboard.array, powerUps);
-  }
-}, 1000 / 60);
+  }}, 1000 / 60);
+
+
+
+
+
+  ////////////////////////////////////////////////////////////////////////////////

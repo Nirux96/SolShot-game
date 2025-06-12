@@ -22,26 +22,8 @@
       </div>
     </div>
     
-    <!-- Interfaz de recompensas y kills -->
-    <div class="rewards-hud">
-      <div class="reward-row">
-        <span class="reward-label">KILLS</span>
-        <span id="killCounter" class="reward-value kills-value">0</span>
-      </div>
-      <div class="reward-row">
-        <span class="reward-label">REWARDS</span>
-        <span class="reward-value">
-          <span class="sol-icon">S</span>
-          <span id="rewardCounter">0.00</span>
-        </span>
-      </div>
-    </div>
-    
     <!-- Notificaciones de power-ups -->
     <div id="powerUpNotification" class="power-up-notification"></div>
-    
-    <!-- Notificaciones de recompensas -->
-    <div id="rewardNotification" class="reward-notification"></div>
   </div>
   
   <script>
@@ -125,24 +107,18 @@ function displayChatMessage(message) {
   const chatMessages = document.getElementById('chatMessages');
   const messageElement = document.createElement('div');
   messageElement.className = 'chat-message';
-  
-  // Usar el color del jugador para el nombre del remitente
-  const senderColor = message.color ? message.color : 'white';
-  
-  // Marcar mensajes propios
-  if (message.isLocal || (currentPlayer && message.sender === currentPlayer.name)) {
+  if (message.isLocal) {
     messageElement.style.borderLeft = '3px solid #14F195';
   }
   
-  // Formatear y mostrar el mensaje
-  messageElement.innerHTML = `<span class="chat-sender" style="color: ${getColorHex(senderColor)}">${message.sender}:</span> ${message.text}`;
+  messageElement.innerHTML = `<span class="chat-sender">${message.sender}:</span> ${message.text}`;
   chatMessages.appendChild(messageElement);
   
   // Auto-scroll al último mensaje
   chatMessages.scrollTop = chatMessages.scrollHeight;
   
   // Eliminar mensajes antiguos si hay demasiados
-  while (chatMessages.children.length > 15) {
+  while (chatMessages.children.length > 10) {
     chatMessages.removeChild(chatMessages.firstChild);
   }
   
@@ -154,36 +130,8 @@ function displayChatMessage(message) {
         chatMessages.removeChild(messageElement);
       }
     }, 1000);
-  }, 15000); // 15 segundos - aumentamos el tiempo para que los mensajes sean más visibles
+  }, 10000); // 10 segundos
 }
-
-// Función auxiliar para obtener el color hexadecimal según el nombre del color
-function getColorHex(colorName) {
-  const colorMap = {
-    'red': '#FF4136',
-    'blue': '#0074D9',
-    'green': '#2ECC40',
-    'yellow': '#FFDC00',
-    'white': '#FFFFFF'
-  };
-  
-  return colorMap[colorName] || colorMap.white;
-}
-
-// Escuchar eventos de chat
-socket.on('chat message', function(message) {
-  displayChatMessage(message);
-});
-
-// Escuchar historial de chat al conectar
-socket.on('chat history', function(messages) {
-  messages.forEach(displayChatMessage);
-});
-
-// Escuchar notificaciones de power-ups
-socket.on('power-up collected', function(data) {
-  showPowerUpNotification(data.type, data.duration);
-});
 
 // Mostrar notificación de power-up
 function showPowerUpNotification(type, duration) {
@@ -215,6 +163,21 @@ function showPowerUpNotification(type, duration) {
     notification.classList.remove('show');
   }, 3000);
 }
+
+// Escuchar eventos de chat
+socket.on('chat message', function(message) {
+  displayChatMessage(message);
+});
+
+// Escuchar historial de chat al conectar
+socket.on('chat history', function(messages) {
+  messages.forEach(displayChatMessage);
+});
+
+// Escuchar notificaciones de power-ups
+socket.on('power-up collected', function(data) {
+  showPowerUpNotification(data.type, data.duration);
+});
 
 </script><script src="static/client/view.js"></script><script>
 function Terrain(pathArg)  {
@@ -325,17 +288,10 @@ controller.listenToUpdate = function() {
 };
 
 // Inicializar controlador
-// Recuperar datos de la URL para pasarlos al controlador
-const urlParams = new URLSearchParams(window.location.search);
-controller.nick = urlParams.get('nick') || 'Player-' + Math.floor(Math.random() * 1000);
-controller.playerColor = urlParams.get('playerColor') || null; // null para permitir colores aleatorios
-
-// Ahora iniciar el juego
 controller.newPlayer();
 controller.emitInput();
 controller.listenToUpdate();
 controller.listenToDeath();
-controller.listenToKillReward(); // Asegurarse de escuchar recompensas por kills
 
 </script>
 
