@@ -11,30 +11,30 @@
 </head>
 <body>
 
-<div class="main-wrapper">
+<div class="main-container">
   <div class="audio-control" id="audioControl" title="Toggle music">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#6c4bb4">
-      <path id="audioIcon" d="M3 10v4c0 .55.45 1 1 1h3l3.29 3.29c.63.63 1.71.18 1.71-.71V6.41c0-.89-1.08-1.34-1.71-.71L7 9H4c-.55 0-1 .45-1 1zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 4.45v.2c0 .38.25.71.6.85C17.18 6.53 19 9.06 19 12s-1.82 5.47-4.4 6.5c-.36.14-.6.47-.6.85v.2c0 .63.63 1.07 1.21.85C18.6 19.11 21 15.84 21 12s-2.4-7.11-5.79-8.4c-.58-.23-1.21.22-1.21.85z"/>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#7e57c2">
+      <path id="audioIcon" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
     </svg>
   </div>
 
-  <header>
-    <div class="logo-container">
-      <h2 class="glow-text">SolSHot</h2>
-    </div>
-  </header>
+  <div class="content-wrapper">
+    <header>
+      <h1 class="logo">SolSHot</h1>
+    </header>
 
-  <section>
-    <enterGameBox>
+    <main>
       <div class="game-form">
-        <h3>Enter Your Name</h3>
         <form action='/goGame' method="post">
-          <div class="input-group">
-            <input type="text" name="nick" placeholder="Your nickname" maxlength="12" required>
+          <div class="input-container">
+            <input type="text" name="nick" placeholder="Enter your nickname" maxlength="12" required>
           </div>
           
-          <div class="skin-selection">
-            <h4>Choose your color</h4>
+          <div class="fee-info">
+            Entry Fee: <span class="fee-amount">0.05 SOL</span> <span class="fee-note">(simulated)</span>
+          </div>
+          
+          <div class="color-selection">
             <div class="color-options">
               <label class="color-option">
                 <input type="radio" name="playerColor" value="red" checked>
@@ -55,32 +55,28 @@
             </div>
           </div>
           
-          <div class="button-group">
-            <input type="submit" value="Play Now" class="primary-button">
-            <button type="button" id="howToPlayBtn" class="secondary-button">How to Play</button>
-            <button type="button" id="creditsBtn" class="secondary-button">Credits</button>
-          </div>
+          <button type="submit" class="play-button">Play</button>
         </form>
-      </div>
-    </enterGameBox>
-
-    <article>
-      <div class="about-content">
-        <h1>About the Game</h1>
-        <div class="description">
-          <p>This is a 2D multiplayer shooting game. Survive, eliminate other players and climb up the leaderboard.</p>
-          <p>The game uses PIXI.js for graphics. Have fun!</p>
-          <div class="important-note">
-            <p>⚠️ Este juego está desplegado en Render. Si estás jugando localmente, inicia el servidor con <code>cd game && node server.js</code></p>
-          </div>
+        
+        <div class="links">
+          <a href="#" id="howToPlayBtn">How to Play</a> | <a href="#" id="creditsBtn">Credits</a>
         </div>
       </div>
-    </article>
-  </section>
 
-  <footer>
-    <p>Modified by me</p>
-  </footer>
+      <div class="about-box">
+        <h2>About the Game</h2>
+        <p>This is a 2D multiplayer shooting game. Survive, eliminate other players and climb up the leaderboard.</p>
+        <p>The game uses PIXI.js for graphics. Have fun!</p>
+        <div class="note">
+          <p>⚠️ Este juego está desplegado en Render. Si estás jugando localmente, inicia el servidor con <code>cd game && node server.js</code></p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>Modified by me</p>
+    </footer>
+  </div>
 </div>
 
 <!-- Modal for How to Play -->
@@ -148,11 +144,13 @@
   const closeHowTo = document.getElementById('closeHowTo');
   const closeCredits = document.getElementById('closeCredits');
 
-  howToPlayBtn.addEventListener('click', function() {
+  howToPlayBtn.addEventListener('click', function(e) {
+    e.preventDefault();
     howToPlayModal.style.display = "block";
   });
 
-  creditsBtn.addEventListener('click', function() {
+  creditsBtn.addEventListener('click', function(e) {
+    e.preventDefault();
     creditsModal.style.display = "block";
   });
 
