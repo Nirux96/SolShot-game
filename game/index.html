@@ -15,6 +15,9 @@
   <div id="gameContainer">
     <!-- El canvas del juego se insertará aquí -->
     
+    <!-- Display de kills y recompensas -->
+    <div id="killsDisplay" class="hud-element">Kills: 0 | Rewards: 0 SOL</div>
+    
     <!-- Chat del juego -->
     <div id="chatContainer" class="chat-container">
       <div id="chatMessages" class="chat-messages"></div>
@@ -180,6 +183,13 @@ socket.on('power-up collected', function(data) {
   showPowerUpNotification(data.type, data.duration);
 });
 
+// Escuchar eventos de kill
+socket.on('kill', function(killerName) {
+  if (killerName === currentPlayer.name) {
+    controller.addKill();
+  }
+});
+
 </script><script src="static/client/view.js"></script><script>
 function Terrain(pathArg)  {
   this.path=pathArg;
@@ -201,71 +211,57 @@ let input = {
   down: false,
   left: false,
   right: false,
-  direction:  Math.PI,
-  LMB: false,
-}
+  mouseX: 0,
+  mouseY: 0,
+  mouseDown: false
+};
 
 document.addEventListener('keydown', function(event) {
-  // Si el chat está abierto, no procesar las teclas de movimiento
-  if (isChatOpen) return;
-  
   switch (event.keyCode) {
     case 65: // A
-    input.left = true;
-    break;
+      input.left = true;
+      break;
     case 87: // W
-    input.up = true;
-    break;
+      input.up = true;
+      break;
     case 68: // D
-    input.right = true;
-    break;
+      input.right = true;
+      break;
     case 83: // S
-    input.down = true;
-    break;
+      input.down = true;
+      break;
   }
 });
 
 document.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
-    input.left = false;
-    break;
+      input.left = false;
+      break;
     case 87: // W
-    input.up = false;
-    break;
+      input.up = false;
+      break;
     case 68: // D
-    input.right = false;
-    break;
+      input.right = false;
+      break;
     case 83: // S
-    input.down = false;
-    break;
+      input.down = false;
+      break;
   }
 });
 
 document.addEventListener('mousemove', function(event) {
-  // Obtener la posición del canvas en la página
-  const rect = app.view.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-  
-  // Calcular el ángulo desde el centro del canvas hasta el mouse
-  const dx = event.clientX - centerX;
-  const dy = event.clientY - centerY;
-  
-  // Usar atan2 para obtener el ángulo correcto en todos los cuadrantes
-  currentPlayer.direction = Math.atan2(dy, dx);
-  input.direction = currentPlayer.direction;
+  let rect = app.view.getBoundingClientRect();
+  input.mouseX = event.clientX - rect.left;
+  input.mouseY = event.clientY - rect.top;
 });
 
-document.addEventListener("mousedown", function(event) {
-  // Si el chat está abierto, no procesar clics
-  if (isChatOpen) return;
-  
-  input.LMB = true;
+document.addEventListener('mousedown', function(event) {
+  input.mouseDown = true;
 });
 
-document.addEventListener("mouseup", function() {
-  input.LMB = false;
+document.addEventListener('mouseup', function(event) {
+  input.mouseDown = false;
 });
 
 // Actualizar el controller para manejar los power-ups
@@ -293,6 +289,7 @@ controller.newPlayer();
 controller.emitInput();
 controller.listenToUpdate();
 controller.listenToDeath();
+controller.listenToKill(); // Añadir escucha de eventos de kill
 
 </script>
 
