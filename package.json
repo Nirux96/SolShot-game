@@ -1,0 +1,17 @@
+{
+  "name": "getrickrolled-game",
+  "version": "1.0.0",
+  "description": "Multiplayer 2D shooting game",
+  "main": "game/server.js",
+  "scripts": {
+    "start": "node game/server.js"
+  },
+  "engines": {
+    "node": ">=14.x"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0",
+    "body-parser": "^1.19.0"
+  }
+} 
