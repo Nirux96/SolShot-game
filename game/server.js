@@ -28,6 +28,10 @@ app.use((req, res, next) => {
 
 // Routing
 app.get('/', function(req, res) {
+  res.sendFile(path.join(__dirname, '../index.html'));
+});
+
+app.get('/game', function(req, res) {
   res.sendFile(path.join(__dirname, '/index.html'));
 });
 
@@ -49,7 +53,6 @@ app.get('/img/wasd.jpg', function(req, res) {
 
 // Manejar tanto /goGame como /game para compatibilidad
 app.post('/goGame', function(req, res) {
-  res.sendFile(path.join(__dirname, '/index.html'));
   console.log(req.body);
   // Guardar nombre y color del jugador
   const playerInfo = {
@@ -57,10 +60,10 @@ app.post('/goGame', function(req, res) {
     color: req.body.playerColor || 'red' // Valor por defecto en caso de que no se elija color
   };
   playersInQueue.push(playerInfo);
+  res.sendFile(path.join(__dirname, '/index.html'));
 });
 
 app.post('/game', function(req, res) {
-  res.sendFile(path.join(__dirname, '/index.html'));
   console.log(req.body);
   // Guardar nombre y color del jugador
   const playerInfo = {
@@ -68,6 +71,7 @@ app.post('/game', function(req, res) {
     color: req.body.playerColor || 'red' // Valor por defecto en caso de que no se elija color
   };
   playersInQueue.push(playerInfo);
+  res.sendFile(path.join(__dirname, '/index.html'));
 });
 
 // Servir archivos estáticos desde la raíz del proyecto

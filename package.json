@@ -1,17 +1,17 @@
 {
-  "name": "getrickrolled-game",
+  "name": "solshot-game",
   "version": "1.0.0",
-  "description": "Multiplayer 2D shooting game",
-  "main": "game/server.js",
+  "description": "SolShot 2D multiplayer shooting game",
+  "main": "start.js",
   "scripts": {
-    "start": "node game/server.js"
+    "start": "node start.js",
+    "dev": "nodemon start.js"
   },
   "engines": {
-    "node": ">=14.x"
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^2.3.0",
-    "body-parser": "^1.19.0"
+    "socket.io": "^2.3.0"
   }
 } 
