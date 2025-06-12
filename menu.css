@@ -18,7 +18,11 @@ body {
   justify-content: center;
 }
 
-.container {
+.container,
+.game-form {
+  position: relative;
+  z-index: 1;
+}
   width: 100%;
   max-width: 1200px;
   display: flex;
