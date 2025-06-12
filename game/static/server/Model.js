@@ -254,10 +254,8 @@ class BulletPhysics {
       for (let i=0; i<this.bullets.length; i++) {
         if (this.bullets[i].x>=player.x-20 && this.bullets[i].x<=player.x+20 && this.bullets[i].y>=player.y-20 && this.bullets[i].y<=player.y+20) {
           player.health -= this.bullets[i].damage;
-          if (player.health<=0) {
+          if (player.health<=0)
             player.killedBy = this.bullets[i].owner;
-            player.killerSocketId = this.bullets[i].owner;
-          }
           this.bullets.splice(i,1);
           i--;
         }

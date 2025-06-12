@@ -9,90 +9,10 @@ class Controller {
       this.playerSpriteHeight = 50;
       this.mode = 'alive';
       this.padding = 50;
-      // Sistema de recompensas
-      this.kills = 0;
-      this.rewards = 0;
-      this.rewardPerKill = 0.04; // SOL por kill
-      this.entryFee = 0.05;      // SOL de entrada (simulado)
   }
 
   newPlayer() {
     socket.emit('new player');
-    // Mostrar mensaje de pago de entrada
-    this.showPaymentNotification();
-  }
-
-  // Función para mostrar notificación de pago inicial
-  showPaymentNotification() {
-    const notification = document.createElement('div');
-    notification.className = 'payment-notification';
-    notification.innerHTML = `${this.entryFee} SOL paid to join match`;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.classList.add('show');
-      
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-          document.body.removeChild(notification);
-        }, 500);
-      }, 3000);
-    }, 100);
-  }
-  
-  // Función para añadir una kill y actualizar recompensas
-  addKill() {
-    this.kills++;
-    this.rewards = parseFloat((this.kills * this.rewardPerKill).toFixed(2));
-    this.updateKillsDisplay();
-  }
-  
-  // Función para actualizar el display de kills y recompensas
-  updateKillsDisplay() {
-    const killsDisplay = document.getElementById('killsDisplay');
-    if (killsDisplay) {
-      killsDisplay.innerHTML = `Kills: ${this.kills} | Rewards: ${this.rewards} SOL`;
-    }
-  }
-  
-  // Función para mostrar pantalla de recompensas al final
-  showRewardsScreen() {
-    const rewardsOverlay = document.createElement('div');
-    rewardsOverlay.className = 'rewards-overlay';
-    
-    const rewardsContent = document.createElement('div');
-    rewardsContent.className = 'rewards-content';
-    
-    rewardsContent.innerHTML = `
-      <h2>Game Over</h2>
-      <p class="kills-count">Kills: <span>${this.kills}</span></p>
-      <p class="rewards-amount">You earned: <span>${this.rewards} SOL</span> <small>(simulated)</small></p>
-      <button id="claimRewardsBtn" class="claim-rewards-btn">Claim Rewards</button>
-      <button id="returnToMenuBtn" class="return-menu-btn">Return to Menu</button>
-    `;
-    
-    rewardsOverlay.appendChild(rewardsContent);
-    document.body.appendChild(rewardsOverlay);
-    
-    // Añadir eventos a los botones
-    document.getElementById('claimRewardsBtn').addEventListener('click', () => {
-      document.getElementById('claimRewardsBtn').disabled = true;
-      document.getElementById('claimRewardsBtn').textContent = 'Claimed!';
-      
-      const claimMsg = document.createElement('div');
-      claimMsg.className = 'claim-message';
-      claimMsg.textContent = `You earned ${this.rewards} SOL (simulated)`;
-      rewardsContent.appendChild(claimMsg);
-      
-      setTimeout(() => {
-        claimMsg.classList.add('show');
-      }, 100);
-    });
-    
-    document.getElementById('returnToMenuBtn').addEventListener('click', () => {
-      window.location.href = '/';
-    });
   }
 
   emitInput() {
@@ -159,41 +79,11 @@ class Controller {
       
       setTimeout(function(){ controller.mode = "dead"; }, 1000);
       setTimeout(function(){ 
-        // Mostrar pantalla de recompensas en lugar de alerta
-        controller.showRewardsScreen();
+        window.alert("¡Has sido eliminado! Volviendo a la página principal...");
+        window.location.href='/';
       }, 1500);
     });
   }
-  
-  // Escuchar eventos de kill
-  listenToKill() {
-    socket.on('kill', function(killerName) {
-      if (killerName === currentPlayer.name) {
-        controller.addKill();
-        // Mostrar notificación de kill
-        showKillNotification();
-      }
-    });
-  }
-}
-
-// Función para mostrar notificación de kill
-function showKillNotification() {
-  const notification = document.createElement('div');
-  notification.className = 'kill-notification';
-  notification.textContent = '+1 KILL (+0.04 SOL)';
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-      notification.classList.remove('show');
-      setTimeout(() => {
-        document.body.removeChild(notification);
-      }, 500);
-    }, 2000);
-  }, 100);
 }
 
 // Función para mostrar notificación de power-up expirado
@@ -308,11 +198,11 @@ class GameMap  {
     this.square = [];
     this.heightInSquares = 17;
     this.widthInSquares = 21;
-    
-    for (var i = 0; i < this.heightInSquares; i++) {
+
+    for (let i = 0; i < this.heightInSquares; i++) {
       this.square[i] = [];
-      for (var j = 0; j < this.widthInSquares; j++) {
-        this.square[i][j] = new Terrain('static/client/sprites/grass.png');
+      for (let j = 0; j < this.widthInSquares; j++) {
+        this.square[i][j]=new Terrain('static/client/sprites/grass.png');
       }
     }
   }
@@ -322,13 +212,15 @@ class Player {
   constructor() {
     this.x = 0;
     this.y = 0;
-    this.xAbsolute = 0;
-    this.yAbsolute = 0;
-    this.direction = 0;
-    this.health = 0;
-    this.name = '';
-    this.weaponType = 'pistol';
+    this.health = 100;
+    this.direction = Math.PI;
+    this.name = 'null';
     this.color = 'red'; // Color por defecto
+    this.powerUps = {
+      speed: { active: false, endTime: 0 },
+      shield: { active: false, endTime: 0 },
+      tripleShot: { active: false, endTime: 0 }
+    };
   }
 }
 
@@ -337,8 +229,6 @@ class CurrentPlayer extends Player {
     super();
     this.xAbsolute = 0;
     this.yAbsolute = 0;
-    this.viewDirectionX = 0;
-    this.viewDirectionY = 0;
   }
 }
 
@@ -347,7 +237,10 @@ class Bullet {
     this.x = xArg;
     this.y = yArg;
     this.direction = directionArg;
-  }
+    this.speed = 15;
+    this.range = 100;
+    this.distanceTraveled = 0;
+  };
 }
 
 class Entry {

@@ -333,13 +333,7 @@ setInterval(function() {
     if (io.sockets.connected[key] && thisPlayer.health <= 0) {
       if (io.sockets.connected[thisPlayer.killedBy]) {
         model.leaderboard.addPoint(thisPlayer.killedBy);
-        
-        // Emitir evento de kill con el nombre del jugador que hizo la kill
-        if (players[thisPlayer.killerSocketId]) {
-          const killerName = players[thisPlayer.killerSocketId].name;
-          io.emit('kill', killerName);
         }
-      }
       thisPlayer.dropItem(model.getItems().array);
       io.to(key).emit('death');
       io.sockets.connected[key].disconnect();
