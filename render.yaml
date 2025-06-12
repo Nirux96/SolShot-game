@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: solshot-game
+    env: node
+    buildCommand: cd game && npm install
+    startCommand: cd game && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+    plan: free 
