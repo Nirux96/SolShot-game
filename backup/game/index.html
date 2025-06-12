@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SolSHot - 2D Shooting Game</title>
+  <link rel="stylesheet" href="static/client/game.css">
+  <link rel="stylesheet" href="static/client/background-custom.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<script src="static/client/pixi/pixi.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="static/client/controller.js"></script>
+
+<body>
+  <div id="gameContainer">
+    <!-- El canvas del juego se insertará aquí -->
+    
+    <!-- Chat del juego -->
+    <div id="chatContainer" class="chat-container">
+      <div id="chatMessages" class="chat-messages"></div>
+      <div id="chatInputContainer" class="chat-input-container">
+        <input type="text" id="chatInput" class="chat-input" maxlength="100" placeholder="Presiona ENTER para chatear..." style="display: none;">
+      </div>
+    </div>
+    
+    <!-- Notificaciones de power-ups -->
+    <div id="powerUpNotification" class="power-up-notification"></div>
+  </div>
+  
+  <script>
+"use strict";
+let leaderboard = [];
+var controller = new Controller();
+
+// Chat variables
+let isChatOpen = false;
+let chatMessages = [];
+
+// Manejar eventos de chat
+function toggleChat() {
+  isChatOpen = !isChatOpen;
+  const chatInput = document.getElementById('chatInput');
+  
+  if (isChatOpen) {
+    chatInput.style.display = 'block';
+    chatInput.focus();
+    // Mostrar mensaje en el chat para indicar que está abierto
+    const chatMessagesElement = document.getElementById('chatMessages');
+    const systemMessage = document.createElement('div');
+    systemMessage.className = 'chat-message system-message';
+    systemMessage.innerHTML = '<span style="color: #00CED1;">Sistema:</span> Chat abierto - Escribe tu mensaje y presiona ENTER para enviar';
+    chatMessagesElement.appendChild(systemMessage);
+    chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+    
+    // Eliminar mensaje después de 3 segundos
+    setTimeout(() => {
+      if (systemMessage.parentNode === chatMessagesElement) {
+        chatMessagesElement.removeChild(systemMessage);
+      }
+    }, 3000);
+  } else {
+    chatInput.style.display = 'none';
+    chatInput.value = '';
+  }
+}
+
+function sendChatMessage() {
+  const chatInput = document.getElementById('chatInput');
+  const message = chatInput.value.trim();
+  
+  if (message.length > 0) {
+    socket.emit('chat message', message);
+    chatInput.value = '';
+    
+    // Simular un eco local del mensaje para evitar latencia
+    const myMessage = {
+      sender: currentPlayer.name,
+      text: message,
+      timestamp: Date.now(),
+      isLocal: true
+    };
+    displayChatMessage(myMessage);
+  }
+  
+  toggleChat();
+}
+
+document.addEventListener('keydown', function(event) {
+  // Si es la tecla Enter y el chat no está abierto, abrir chat
+  if (event.keyCode === 13 && !isChatOpen) {
+    event.preventDefault();
+    toggleChat();
+  } 
+  // Si es la tecla Enter y el chat está abierto, enviar mensaje
+  else if (event.keyCode === 13 && isChatOpen) {
+    event.preventDefault();
+    sendChatMessage();
+  }
+  // Si es la tecla Escape y el chat está abierto, cerrar chat
+  else if (event.keyCode === 27 && isChatOpen) {
+    event.preventDefault();
+    toggleChat();
+  }
+});
+
+// Mostrar mensajes de chat
+function displayChatMessage(message) {
+  const chatMessages = document.getElementById('chatMessages');
+  const messageElement = document.createElement('div');
+  messageElement.className = 'chat-message';
+  if (message.isLocal) {
+    messageElement.style.borderLeft = '3px solid #14F195';
+  }
+  
+  messageElement.innerHTML = `<span class="chat-sender">${message.sender}:</span> ${message.text}`;
+  chatMessages.appendChild(messageElement);
+  
+  // Auto-scroll al último mensaje
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Eliminar mensajes antiguos si hay demasiados
+  while (chatMessages.children.length > 10) {
+    chatMessages.removeChild(chatMessages.firstChild);
+  }
+  
+  // Hacer que el mensaje desaparezca después de un tiempo
+  setTimeout(() => {
+    messageElement.classList.add('fade-out');
+    setTimeout(() => {
+      if (messageElement.parentNode === chatMessages) {
+        chatMessages.removeChild(messageElement);
+      }
+    }, 1000);
+  }, 10000); // 10 segundos
+}
+
+// Mostrar notificación de power-up
+function showPowerUpNotification(type, duration) {
+  const notification = document.getElementById('powerUpNotification');
+  let message = '';
+  let color = '';
+  
+  switch(type) {
+    case 'speed':
+      message = 'Speed Boost!';
+      color = '#FFDC00'; // Amarillo
+      break;
+    case 'shield':
+      message = 'Shield Activated!';
+      color = '#0074D9'; // Azul
+      break;
+    case 'tripleShot':
+      message = 'Triple Shot!';
+      color = '#FF4136'; // Rojo
+      break;
+  }
+  
+  notification.textContent = message;
+  notification.style.backgroundColor = color;
+  notification.classList.add('show');
+  
+  // Ocultar después de unos segundos
+  setTimeout(() => {
+    notification.classList.remove('show');
+  }, 3000);
+}
+
+// Escuchar eventos de chat
+socket.on('chat message', function(message) {
+  displayChatMessage(message);
+});
+
+// Escuchar historial de chat al conectar
+socket.on('chat history', function(messages) {
+  messages.forEach(displayChatMessage);
+});
+
+// Escuchar notificaciones de power-ups
+socket.on('power-up collected', function(data) {
+  showPowerUpNotification(data.type, data.duration);
+});
+
+</script><script src="static/client/view.js"></script><script>
+function Terrain(pathArg)  {
+  this.path=pathArg;
+}
+document.getElementById('gameContainer').appendChild(app.view);
+
+let gameMap = new GameMap();
+let players = [];
+let bullets = [];
+let items = [];
+let powerUps = []; // Array para los power-ups
+let currentPlayer = new CurrentPlayer();
+
+////////////////////////////////////////////////////////////////////////////////
+let socket = io();
+
+let input = {
+  up: false,
+  down: false,
+  left: false,
+  right: false,
+  direction:  Math.PI,
+  LMB: false,
+}
+
+document.addEventListener('keydown', function(event) {
+  // Si el chat está abierto, no procesar las teclas de movimiento
+  if (isChatOpen) return;
+  
+  switch (event.keyCode) {
+    case 65: // A
+    input.left = true;
+    break;
+    case 87: // W
+    input.up = true;
+    break;
+    case 68: // D
+    input.right = true;
+    break;
+    case 83: // S
+    input.down = true;
+    break;
+  }
+});
+
+document.addEventListener('keyup', function(event) {
+  switch (event.keyCode) {
+    case 65: // A
+    input.left = false;
+    break;
+    case 87: // W
+    input.up = false;
+    break;
+    case 68: // D
+    input.right = false;
+    break;
+    case 83: // S
+    input.down = false;
+    break;
+  }
+});
+
+document.addEventListener('mousemove', function(event) {
+  // Obtener la posición del canvas en la página
+  const rect = app.view.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  
+  // Calcular el ángulo desde el centro del canvas hasta el mouse
+  const dx = event.clientX - centerX;
+  const dy = event.clientY - centerY;
+  
+  // Usar atan2 para obtener el ángulo correcto en todos los cuadrantes
+  currentPlayer.direction = Math.atan2(dy, dx);
+  input.direction = currentPlayer.direction;
+});
+
+document.addEventListener("mousedown", function(event) {
+  // Si el chat está abierto, no procesar clics
+  if (isChatOpen) return;
+  
+  input.LMB = true;
+});
+
+document.addEventListener("mouseup", function() {
+  input.LMB = false;
+});
+
+// Actualizar el controller para manejar los power-ups
+controller.listenToUpdate = function() {
+  socket.on('update', function(newPlayers, newCurrentPlayer, newAbsoluteCurrentPlayer, currentPlayerMap, bulletsArg, itemsArg, leaderboard2, powerUpsArg) {
+    players = newPlayers;
+    currentPlayer = newCurrentPlayer;
+    leaderboard = leaderboard2;
+    currentPlayer.xAbsolute = newAbsoluteCurrentPlayer.x;
+    currentPlayer.yAbsolute = newAbsoluteCurrentPlayer.y;
+    bullets = bulletsArg;
+    items = itemsArg;
+    powerUps = powerUpsArg || []; // Actualizar power-ups
+
+    for (var i = 0; i < 17; i++) {
+      for (var j = 0; j < 21; j++) {
+        gameMap.square[i][j].path = 'static/client/sprites/' + currentPlayerMap[i][j] + '.png';
+      }
+    }
+  });
+};
+
+// Inicializar controlador
+controller.newPlayer();
+controller.emitInput();
+controller.listenToUpdate();
+controller.listenToDeath();
+
+</script>
+
+</body>
+</html>

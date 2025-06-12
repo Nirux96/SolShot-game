@@ -19,7 +19,12 @@ const PORT = process.env.PORT || 54071;
 app.set('port', PORT);
 app.use('/static', express.static(__dirname + '/static'));
 
-
+// Permitir CORS para que funcione en entornos de producción
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
 
 // Routing
 app.get('/', function(req, res) {
@@ -46,7 +51,19 @@ app.get('/img/wasd.jpg', function(req, res) {
   res.sendFile(path.join(__dirname + '/../img/wasd.jpg'));
 });
 
+// Manejar tanto /goGame como /game para compatibilidad
 app.post('/goGame', function(req, res) {
+  console.log(req.body);
+  // Guardar nombre y color del jugador
+  const playerInfo = {
+    nick: req.body.nick || 'Player',
+    color: req.body.playerColor || 'red' // Valor por defecto en caso de que no se elija color
+  };
+  playersInQueue.push(playerInfo);
+  res.sendFile(path.join(__dirname, '/index.html'));
+});
+
+app.post('/game', function(req, res) {
   console.log(req.body);
   // Guardar nombre y color del jugador
   const playerInfo = {

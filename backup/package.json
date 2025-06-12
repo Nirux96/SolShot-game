@@ -2,8 +2,13 @@
   "name": "solshot-game",
   "version": "1.0.0",
   "description": "SolShot 2D multiplayer shooting game",
+  "main": "start.js",
   "scripts": {
-    "start": "cd game && node server.js"
+    "start": "node start.js",
+    "dev": "nodemon start.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "express": "^4.17.1",
