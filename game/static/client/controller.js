@@ -17,36 +17,10 @@ class Controller {
   }
 
   newPlayer() {
-    // Mostrar popup de pago de entrada
-    this.showEntryFeePopup();
-  }
-
-  // Función para mostrar el popup de pago de entrada
-  showEntryFeePopup() {
-    const popup = document.createElement('div');
-    popup.className = 'entry-fee-popup';
-    
-    const content = document.createElement('div');
-    content.className = 'entry-fee-content';
-    
-    content.innerHTML = `
-      <h2>Entry Fee</h2>
-      <p>Pagarás <span class="sol-amount">${this.entryFee} SOL</span> para jugar</p>
-      <small>(simulado)</small>
-      <button id="payEntryFeeBtn" class="entry-fee-btn">Aceptar</button>
-    `;
-    
-    popup.appendChild(content);
-    document.body.appendChild(popup);
-    
-    // Añadir evento al botón
-    document.getElementById('payEntryFeeBtn').addEventListener('click', () => {
-      document.body.removeChild(popup);
-      // Crear el contador de kills
-      this.createKillsCounter();
-      // Conectar con el servidor
-      socket.emit('new player');
-    });
+    // Crear el contador de kills directamente sin mostrar popup
+    this.createKillsCounter();
+    // Conectar con el servidor
+    socket.emit('new player');
   }
   
   // Función para crear el contador de kills
