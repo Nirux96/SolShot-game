@@ -201,9 +201,9 @@ let input = {
   down: false,
   left: false,
   right: false,
-  direction:  Math.PI,
+  direction: Math.PI,
   LMB: false,
-}
+};
 
 document.addEventListener('keydown', function(event) {
   // Si el chat está abierto, no procesar las teclas de movimiento
@@ -211,34 +211,34 @@ document.addEventListener('keydown', function(event) {
   
   switch (event.keyCode) {
     case 65: // A
-    input.left = true;
-    break;
+      input.left = true;
+      break;
     case 87: // W
-    input.up = true;
-    break;
+      input.up = true;
+      break;
     case 68: // D
-    input.right = true;
-    break;
+      input.right = true;
+      break;
     case 83: // S
-    input.down = true;
-    break;
+      input.down = true;
+      break;
   }
 });
 
 document.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
-    input.left = false;
-    break;
+      input.left = false;
+      break;
     case 87: // W
-    input.up = false;
-    break;
+      input.up = false;
+      break;
     case 68: // D
-    input.right = false;
-    break;
+      input.right = false;
+      break;
     case 83: // S
-    input.down = false;
-    break;
+      input.down = false;
+      break;
   }
 });
 
@@ -293,6 +293,7 @@ controller.newPlayer();
 controller.emitInput();
 controller.listenToUpdate();
 controller.listenToDeath();
+controller.listenToKill();
 
 </script>
 

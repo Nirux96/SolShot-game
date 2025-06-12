@@ -9,10 +9,90 @@ class Controller {
       this.playerSpriteHeight = 50;
       this.mode = 'alive';
       this.padding = 50;
+      // Sistema de recompensas
+      this.kills = 0;
+      this.rewards = 0;
+      this.rewardPerKill = 0.04; // SOL por kill
+      this.entryFee = 0.05;      // SOL de entrada (simulado)
   }
 
   newPlayer() {
-    socket.emit('new player');
+    // Mostrar popup de pago de entrada
+    this.showEntryFeePopup();
+  }
+
+  // Función para mostrar el popup de pago de entrada
+  showEntryFeePopup() {
+    const popup = document.createElement('div');
+    popup.className = 'entry-fee-popup';
+    
+    const content = document.createElement('div');
+    content.className = 'entry-fee-content';
+    
+    content.innerHTML = `
+      <h2>Entry Fee</h2>
+      <p>Pagarás <span class="sol-amount">${this.entryFee} SOL</span> para jugar</p>
+      <small>(simulado)</small>
+      <button id="payEntryFeeBtn" class="entry-fee-btn">Aceptar</button>
+    `;
+    
+    popup.appendChild(content);
+    document.body.appendChild(popup);
+    
+    // Añadir evento al botón
+    document.getElementById('payEntryFeeBtn').addEventListener('click', () => {
+      document.body.removeChild(popup);
+      // Crear el contador de kills
+      this.createKillsCounter();
+      // Conectar con el servidor
+      socket.emit('new player');
+    });
+  }
+  
+  // Función para crear el contador de kills
+  createKillsCounter() {
+    const killsCounter = document.createElement('div');
+    killsCounter.id = 'killsCounter';
+    killsCounter.className = 'kills-counter';
+    killsCounter.innerHTML = `Kills: <span class="kill-count">0</span> | Rewards: <span class="sol-amount">0.00 SOL</span>`;
+    document.body.appendChild(killsCounter);
+  }
+  
+  // Función para añadir una kill y actualizar recompensas
+  addKill() {
+    this.kills++;
+    this.rewards = parseFloat((this.kills * this.rewardPerKill).toFixed(2));
+    this.updateKillsDisplay();
+    this.showKillNotification();
+  }
+  
+  // Función para actualizar el display de kills y recompensas
+  updateKillsDisplay() {
+    const killsCounter = document.getElementById('killsCounter');
+    if (killsCounter) {
+      killsCounter.innerHTML = `Kills: <span class="kill-count">${this.kills}</span> | Rewards: <span class="sol-amount">${this.rewards.toFixed(2)} SOL</span>`;
+    }
+  }
+  
+  // Función para mostrar notificación de kill
+  showKillNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'kill-notification';
+    notification.textContent = `+1 KILL (+${this.rewardPerKill} SOL)`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => {
+          if (notification.parentNode === document.body) {
+            document.body.removeChild(notification);
+          }
+        }, 500);
+      }, 2000);
+    }, 100);
   }
 
   emitInput() {
@@ -79,9 +159,20 @@ class Controller {
       
       setTimeout(function(){ controller.mode = "dead"; }, 1000);
       setTimeout(function(){ 
-        window.alert("¡Has sido eliminado! Volviendo a la página principal...");
+        // Mostrar el mensaje con las recompensas ganadas
+        let message = `Has sido eliminado!\n\nKills: ${controller.kills}\nRecompensa: ${controller.rewards.toFixed(2)} SOL (simulado)`;
+        window.alert(message);
         window.location.href='/';
       }, 1500);
+    });
+  }
+  
+  // Escuchar eventos de kill
+  listenToKill() {
+    socket.on('kill', function(killerName) {
+      if (killerName === currentPlayer.name) {
+        controller.addKill();
+      }
     });
   }
 }
@@ -198,11 +289,11 @@ class GameMap  {
     this.square = [];
     this.heightInSquares = 17;
     this.widthInSquares = 21;
-
-    for (let i = 0; i < this.heightInSquares; i++) {
+    
+    for (var i = 0; i < this.heightInSquares; i++) {
       this.square[i] = [];
-      for (let j = 0; j < this.widthInSquares; j++) {
-        this.square[i][j]=new Terrain('static/client/sprites/grass.png');
+      for (var j = 0; j < this.widthInSquares; j++) {
+        this.square[i][j] = new Terrain('static/client/sprites/grass.png');
       }
     }
   }
@@ -212,15 +303,13 @@ class Player {
   constructor() {
     this.x = 0;
     this.y = 0;
-    this.health = 100;
-    this.direction = Math.PI;
-    this.name = 'null';
+    this.xAbsolute = 0;
+    this.yAbsolute = 0;
+    this.direction = 0;
+    this.health = 0;
+    this.name = '';
+    this.weaponType = 'pistol';
     this.color = 'red'; // Color por defecto
-    this.powerUps = {
-      speed: { active: false, endTime: 0 },
-      shield: { active: false, endTime: 0 },
-      tripleShot: { active: false, endTime: 0 }
-    };
   }
 }
 
@@ -229,6 +318,8 @@ class CurrentPlayer extends Player {
     super();
     this.xAbsolute = 0;
     this.yAbsolute = 0;
+    this.viewDirectionX = 0;
+    this.viewDirectionY = 0;
   }
 }
 
@@ -237,10 +328,7 @@ class Bullet {
     this.x = xArg;
     this.y = yArg;
     this.direction = directionArg;
-    this.speed = 15;
-    this.range = 100;
-    this.distanceTraveled = 0;
-  };
+  }
 }
 
 class Entry {

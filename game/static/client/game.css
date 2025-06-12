@@ -198,20 +198,142 @@ body::after {
   left: 10px;
   color: white;
   font-size: 12px;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 3px 8px;
-  border-radius: 4px;
-  pointer-events: none;
-  animation: pulse 2s infinite;
+  opacity: 0.7;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
+/* Sistema de recompensas */
+.kills-counter {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  z-index: 1000;
+  border: 1px solid rgba(153, 69, 255, 0.3);
+  box-shadow: 0 0 15px rgba(153, 69, 255, 0.2);
+}
+
+.kills-counter .sol-amount {
+  color: #FFC107;
+  font-weight: bold;
+}
+
+.kills-counter .kill-count {
+  color: #14F195;
+  font-weight: bold;
+}
+
+.entry-fee-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+
+.entry-fee-content {
+  background-color: rgba(30, 30, 40, 0.9);
+  border-radius: 20px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  border: 2px solid rgba(153, 69, 255, 0.5);
+  box-shadow: 0 0 30px rgba(153, 69, 255, 0.3);
+}
+
+.entry-fee-content h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 0 0 10px rgba(153, 69, 255, 0.5);
+}
+
+.entry-fee-content p {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  margin-bottom: 25px;
+  color: white;
+}
+
+.entry-fee-content .sol-amount {
+  color: #FFC107;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+.entry-fee-content small {
+  display: block;
+  color: #aaa;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.entry-fee-btn {
+  background-color: #7e57c2;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 30px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(126, 87, 194, 0.3);
+}
+
+.entry-fee-btn:hover {
+  background-color: #9575cd;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(126, 87, 194, 0.4);
+}
+
+.kill-notification {
+  position: fixed;
+  top: 150px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background-color: rgba(76, 175, 80, 0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 20px;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+  z-index: 1000;
+  opacity: 0;
+  transition: all 0.3s ease;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.kill-notification.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* Animación de pulso para elementos */
 @keyframes pulse {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-/* Notificación de power-ups */
+/* Notificación de power-up */
 .power-up-notification {
   position: absolute;
   top: 50%;

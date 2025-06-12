@@ -25,7 +25,7 @@
 
     <main>
       <div class="game-form">
-        <form action='/goGame' method="post">
+        <form action='/goGame' method="post" id="playForm">
           <div class="input-container">
             <input type="text" name="nick" placeholder="Enter your nickname" maxlength="12" required>
           </div>
@@ -55,7 +55,7 @@
             </div>
           </div>
           
-          <button type="submit" class="play-button">Play</button>
+          <button type="button" class="play-button" id="playButton">Play</button>
         </form>
         
         <div class="links">
@@ -111,6 +111,19 @@
   </div>
 </div>
 
+<!-- Modal for Entry Fee -->
+<div id="entryFeeModal" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" id="closeEntryFee">&times;</span>
+    <h2 class="modal-title">Entry Fee</h2>
+    <div class="modal-text">
+      <p>Pagarás <span class="fee-amount">0.05 SOL</span> para jugar</p>
+      <p class="fee-note">(simulado)</p>
+      <button id="confirmPayBtn" class="modal-button">Aceptar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Background music -->
 <audio id="bgMusic" loop>
   <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
@@ -141,8 +154,13 @@
   const creditsBtn = document.getElementById('creditsBtn');
   const howToPlayModal = document.getElementById('howToPlayModal');
   const creditsModal = document.getElementById('creditsModal');
+  const entryFeeModal = document.getElementById('entryFeeModal');
   const closeHowTo = document.getElementById('closeHowTo');
   const closeCredits = document.getElementById('closeCredits');
+  const closeEntryFee = document.getElementById('closeEntryFee');
+  const playButton = document.getElementById('playButton');
+  const playForm = document.getElementById('playForm');
+  const confirmPayBtn = document.getElementById('confirmPayBtn');
 
   howToPlayBtn.addEventListener('click', function(e) {
     e.preventDefault();
@@ -153,6 +171,23 @@
     e.preventDefault();
     creditsModal.style.display = "block";
   });
+  
+  playButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    // Verificar que el formulario sea válido antes de mostrar el modal
+    if (playForm.checkValidity()) {
+      entryFeeModal.style.display = "block";
+    } else {
+      // Trigger validación nativa del navegador
+      playForm.reportValidity();
+    }
+  });
+  
+  confirmPayBtn.addEventListener('click', function() {
+    entryFeeModal.style.display = "none";
+    // Enviar el formulario
+    playForm.submit();
+  });
 
   closeHowTo.addEventListener('click', function() {
     howToPlayModal.style.display = "none";
@@ -160,6 +195,10 @@
 
   closeCredits.addEventListener('click', function() {
     creditsModal.style.display = "none";
+  });
+  
+  closeEntryFee.addEventListener('click', function() {
+    entryFeeModal.style.display = "none";
   });
 
   // Close modals when clicking outside
@@ -169,6 +208,9 @@
     }
     if (event.target == creditsModal) {
       creditsModal.style.display = "none";
+    }
+    if (event.target == entryFeeModal) {
+      entryFeeModal.style.display = "none";
     }
   });
 </script>
